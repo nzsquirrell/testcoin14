@@ -82,6 +82,10 @@ public:
         consensus.nPoWAveragingInterval = 10; // 10 block averaging interval
         consensus.nMaxAdjustDown = 4; // 4% adjustment downwards
         consensus.nMaxAdjustUp = 4; // 4% adjustment upwards
+        consensus.nStartAuxPow = 0;
+        consensus.nAuxpowChainId = 0x123;
+        consensus.fStrictChainId = false;
+        consensus.nLegacyBlocksBefore = -1;
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 1916; // 95% of 2016
@@ -120,7 +124,7 @@ public:
 
         genesis = CreateGenesisBlock(1455597574, 1434119, 0x1e0fffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        
+
         if(genesis.GetHash() != uint256S("0xb519bb2dd76860028f90b06ec7035467f9a48dea48d105a1d9f339bc778b17c3"))
         {
             printf("Searching for mainnet genesis block...\n");
@@ -128,9 +132,9 @@ public:
             bool fOverflow;
             arith_uint256 bnTarget;
             bnTarget.SetCompact(genesis.nBits, &fNegative, &fOverflow);
-            
+
             uint256 thash = genesis.GetPoWHash();
-            
+
             while (UintToArith256(thash) > bnTarget)
             {
                 thash = genesis.GetPoWHash();
@@ -147,14 +151,14 @@ public:
                     ++genesis.nTime;
                 }
             }
-            
+
             printf("genesis.nTime = %u \n", genesis.nTime);
             printf("genesis.nNonce = %u \n", genesis.nNonce);
             printf("genesis.GetHash = %s\n", genesis.GetHash().ToString().c_str());
             printf("genesis.GetPoWHash = %s\n", genesis.GetPoWHash().ToString().c_str());
             printf("genesis.hashMerkleRoot = %s\n", BlockMerkleRoot(genesis).ToString().c_str());
         }
-        
+
         assert(consensus.hashGenesisBlock == uint256S("0xb519bb2dd76860028f90b06ec7035467f9a48dea48d105a1d9f339bc778b17c3"));
         assert(genesis.hashMerkleRoot == uint256S("0xa1c37dfaac8ac852263a658ab7024bd52954a748c9b149b0aec5c3193c1c34ab"));
 
@@ -208,6 +212,10 @@ public:
         consensus.nPoWAveragingInterval = 10; // 10 block averaging interval
         consensus.nMaxAdjustDown = 4; // 4% adjustment downwards
         consensus.nMaxAdjustUp = 4; // 4% adjustment upwards
+        consensus.nStartAuxPow = 0;
+        consensus.nAuxpowChainId = 0x123;
+        consensus.fStrictChainId = false;
+        consensus.nLegacyBlocksBefore = -1;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
@@ -241,7 +249,7 @@ public:
 
         genesis = CreateGenesisBlock(1455597594, 856768, 0x1e0fffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        
+
         if(genesis.GetHash() != uint256S("0xca8e01ba2dc3200766d4dc33283e941d0a902eee7ec364f70e477923a213e115"))
         {
             printf("Searching for testnet genesis block...\n");
@@ -249,9 +257,9 @@ public:
             bool fOverflow;
             arith_uint256 bnTarget;
             bnTarget.SetCompact(genesis.nBits, &fNegative, &fOverflow);
-            
+
             uint256 thash = genesis.GetPoWHash();
-            
+
             while (UintToArith256(thash) > bnTarget)
             {
                 thash = genesis.GetPoWHash();
@@ -268,14 +276,14 @@ public:
                     ++genesis.nTime;
                 }
             }
-            
+
             printf("genesis.nTime = %u \n", genesis.nTime);
             printf("genesis.nNonce = %u \n", genesis.nNonce);
             printf("genesis.GetHash = %s\n", genesis.GetHash().ToString().c_str());
             printf("genesis.GetPoWHash = %s\n", genesis.GetPoWHash().ToString().c_str());
             printf("genesis.hashMerkleRoot = %s\n", BlockMerkleRoot(genesis).ToString().c_str());
         }
-        
+
         assert(consensus.hashGenesisBlock == uint256S("0xca8e01ba2dc3200766d4dc33283e941d0a902eee7ec364f70e477923a213e115"));
         assert(genesis.hashMerkleRoot == uint256S("0xa1c37dfaac8ac852263a658ab7024bd52954a748c9b149b0aec5c3193c1c34ab"));
 
@@ -332,6 +340,10 @@ public:
         consensus.nPoWAveragingInterval = 10; // 10 block averaging interval
         consensus.nMaxAdjustDown = 4; // 4% adjustment downwards
         consensus.nMaxAdjustUp = 4; // 4% adjustment upwards
+        consensus.nStartAuxPow = 0;
+        consensus.nAuxpowChainId = 0x123;
+        consensus.fStrictChainId = false;
+        consensus.nLegacyBlocksBefore = -1;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
         consensus.nRuleChangeActivationThreshold = 108; // 75% for testchains
@@ -427,4 +439,4 @@ void UpdateRegtestBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime,
 {
     regTestParams.UpdateBIP9Parameters(d, nStartTime, nTimeout);
 }
- 
+
