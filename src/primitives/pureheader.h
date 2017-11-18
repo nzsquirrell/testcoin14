@@ -8,6 +8,24 @@
 
 #include "serialize.h"
 #include "uint256.h"
+#include "consensus/params.h"
+
+/** Multi-Algo definitions used to encode algorithm in nVersion */
+enum {
+    ALGO_SLOT1 = 0,  // Skein
+    ALGO_SLOT2 = 1,  // Myr-Groestl
+    ALGO_SLOT3 = 2,  // Sha256d
+    NUM_ALGOS
+};
+
+enum {
+    BLOCK_VERSION_ALGO      = (7 << 9),
+    BLOCK_VERSION_SLOT2     = (1 << 9),
+    BLOCK_VERSION_SLOT3     = (2 << 9)
+};
+
+/** extract algo from nVersion */
+int GetAlgo(int nVersion);
 
 /**
  * A block header without auxpow information.  This "intermediate step"
@@ -69,8 +87,8 @@ public:
 
     uint256 GetHash() const;
 
-    uint256 GetPoWHash() const;
-    
+    uint256 GetPoWHash(int algo, const Consensus::Params& consensusParams) const;
+
     int64_t GetBlockTime() const
     {
         return (int64_t)nTime;
@@ -151,6 +169,30 @@ public:
     inline bool IsLegacy() const
     {
         return nVersion == 1;
+    }
+
+    /** Extract algo from blockheader */
+    inline int GetAlgo() const
+    {
+        return ::GetAlgo(nVersion);
+    }
+
+    /** Encode the algorithm into nVersion */
+    inline void SetAlgo(int algo)
+    {
+        switch (algo)
+        {
+            case ALGO_SLOT1:
+                break;
+            case ALGO_SLOT2:
+                nVersion |= BLOCK_VERSION_SLOT2;
+                break;
+            case ALGO_SLOT3:
+                nVersion |= BLOCK_VERSION_SLOT3;
+                break;
+            default:
+                break;
+        }
     }
 };
 

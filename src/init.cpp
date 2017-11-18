@@ -25,6 +25,7 @@
 #include "net.h"
 #include "net_processing.h"
 #include "policy/policy.h"
+#include "primitives/pureheader.h"
 #include "rpc/server.h"
 #include "rpc/register.h"
 #include "script/standard.h"
@@ -484,6 +485,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-blockmintxfee=<amt>", strprintf(_("Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)"), CURRENCY_UNIT, FormatMoney(DEFAULT_BLOCK_MIN_TX_FEE)));
     if (showDebug)
         strUsage += HelpMessageOpt("-blockversion=<n>", "Override block version to test forking scenarios");
+    strUsage += HelpMessageOpt("-algo=<algo>", _("Mining algorithm: skein, myr-groestl, sha256d"));
 
     strUsage += HelpMessageGroup(_("RPC server options:"));
     strUsage += HelpMessageOpt("-server", _("Accept command line and JSON-RPC commands"));
@@ -1105,6 +1107,19 @@ bool AppInitParameterInteraction()
             }
         }
     }
+
+    // determine algorithm to be used for any mining for this instance
+    std::string strAlgo = GetArg("-algo", "skein");
+    transform(strAlgo.begin(),strAlgo.end(),strAlgo.begin(),::tolower);
+    if (strAlgo == "skein")
+        miningAlgo = ALGO_SLOT1;
+    else if (strAlgo == "myr-groestl" || strAlgo == "myr-gr" || strAlgo == "myrgr" || strAlgo == "groestl")
+        miningAlgo = ALGO_SLOT2;
+    else if (strAlgo == "sha256d" || strAlgo == "sha256" || strAlgo == "sha")
+        miningAlgo = ALGO_SLOT3;
+    else
+        miningAlgo = ALGO_SLOT1;
+
     return true;
 }
 

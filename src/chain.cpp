@@ -175,3 +175,29 @@ int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& fr
     }
     return sign * r.GetLow64();
 }
+
+const CBlockIndex* GetLastBlockIndexForAlgo(const CBlockIndex* pindex, int algo)
+{
+    for (;;)
+    {
+        if (!pindex)
+            return NULL;
+        if (pindex->GetAlgo() == algo)
+            return pindex;
+        pindex = pindex->pprev;
+    }
+}
+
+std::string GetAlgoName(int algo, uint32_t time, const Consensus::Params& consensusParams)
+{
+    switch (algo)
+    {
+        case ALGO_SLOT1:
+            return std::string("Skein");
+        case ALGO_SLOT2:
+            return std::string("Myr-Groestl");
+        case ALGO_SLOT3:
+            return std::string("Sha256d");
+    }
+    return std::string("Unknown");
+}

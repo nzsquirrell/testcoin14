@@ -298,7 +298,10 @@ libbitcoin_consensus_a_SOURCES = \
   crypto/hashskein.h \
   crypto/sha3/skein.c \
   crypto/sha3/sph_skein.h \
-  crypto/sha3/sph_types.h
+  crypto/sha3/sph_types.h \
+  crypto/sha3/groestl.c \
+  crypto/sha3/sph_groestl.h \
+  crypto/hashgroestl.h
 
 # common: shared between testcoind, and testcoin-qt and non-server tools
 libbitcoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)

@@ -181,9 +181,9 @@ public:
 
   /** returns the true parent Proof-Of-Work hash, not just the SHA256d hash as getParentBlockHash does */
   inline uint256
-  getParentBlockPoWHash () const
+  getParentBlockPoWHash (int algo, const Consensus::Params& consensusParams) const
   {
-    return parentBlock.GetPoWHash ();
+    return parentBlock.GetPoWHash (algo, consensusParams);
   }
 
 
