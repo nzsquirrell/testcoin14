@@ -10,6 +10,8 @@
 #include <map>
 #include <string>
 
+const int algoCount = 3;
+
 namespace Consensus {
 
 enum DeploymentPos
@@ -39,6 +41,10 @@ struct BIP9Deployment {
 struct Params {
     uint256 hashGenesisBlock;
     int nSubsidyHalvingInterval;
+    /** Used to check majorities for block version upgrade */
+    int nMajorityEnforceBlockUpgrade;
+    int nMajorityRejectBlockOutdated;
+    int nMajorityWindow;
     /** Block height and hash at which BIP34 becomes active */
     int BIP34Height;
     uint256 BIP34Hash;
@@ -55,16 +61,17 @@ struct Params {
     uint32_t nMinerConfirmationWindow;
     BIP9Deployment vDeployments[MAX_VERSION_BITS_DEPLOYMENTS];
     /** Proof of work parameters */
-    uint256 powLimit[5];
+    uint256 powLimit[algoCount];
     bool fPowAllowMinDifficultyBlocks;
     bool fPowNoRetargeting;
     int64_t nPowTargetSpacing;
     int64_t nPowTargetTimespan;
     int64_t nPoWAveragingInterval;
-    int64_t nPoWAveragingTargetTimespan() const { return nPoWAveragingInterval * nPowTargetSpacing; }
+    int64_t nPoWAveragingTargetTimespan() const { return nPoWAveragingInterval * nPowTargetSpacing * algoCount; }
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
     int64_t nMaxAdjustDown;
     int64_t nMaxAdjustUp;
+    int nBlockSequentialAlgoMaxCount;
     int16_t nAuxpowChainId;
     bool fStrictChainId;
     int nStartAuxPow;

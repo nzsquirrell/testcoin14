@@ -19,7 +19,12 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     if (pindexLast == NULL)
         return nProofOfWorkLimit.GetCompact();
 
-    const CBlockIndex* pindexFirst = pindexLast;
+    // find previous block with same algo
+    const CBlockIndex* pindexPrev = GetLastBlockIndexForAlgo(pindexLast, algo);
+    if (pindexPrev == NULL)
+        return nProofOfWorkLimit.GetCompact();
+
+    const CBlockIndex* pindexFirst = pindexPrev;
 
     int64_t nMinActualTimespan = params.nPoWAveragingTargetTimespan() * (100 - params.nMaxAdjustUp) / 100;
     int64_t nMaxActualTimespan = params.nPoWAveragingTargetTimespan() * (100 - params.nMaxAdjustDown) / 100;
@@ -28,23 +33,24 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     for (int i = 0; pindexFirst && i < params.nPoWAveragingInterval - 1; i++)
     {
         pindexFirst = pindexFirst->pprev;
+        pindexFirst = GetLastBlockIndexForAlgo(pindexFirst, algo);
         if (pindexFirst == NULL)
             return nProofOfWorkLimit.GetCompact();
     }
 
     int64_t nActualTimespan = pindexLast->GetMedianTimePast() - pindexFirst->GetMedianTimePast();
 
-    LogPrintf("  nActualTimespan = %d before bounds   %d   %d\n", nActualTimespan, pindexLast->GetBlockTime(), pindexFirst->GetBlockTime());
+    LogPrintf("GetNextWorkRequired(Algo=%d):   nActualTimespan = %d before bounds   %d   %d\n", algo, nActualTimespan, pindexLast->GetMedianTimePast(), pindexFirst->GetMedianTimePast());
 
     if (nActualTimespan < nMinActualTimespan)
         nActualTimespan = nMinActualTimespan;
     if (nActualTimespan > nMaxActualTimespan)
         nActualTimespan = nMaxActualTimespan;
 
-    LogPrintf("  nActualTimespan = %d after bounds   %d   %d\n", nActualTimespan, nMinActualTimespan, nMaxActualTimespan);
+    LogPrintf("GetNextWorkRequired(Algo=%d):   nActualTimespan = %d after bounds   %d   %d\n", algo, nActualTimespan, nMinActualTimespan, nMaxActualTimespan);
 
     arith_uint256 bnNew;
-    bnNew.SetCompact(pindexLast->nBits);
+    bnNew.SetCompact(pindexPrev->nBits);
     arith_uint256 bnOld;
     bnOld = bnNew;
 
@@ -53,9 +59,9 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     if(bnNew > nProofOfWorkLimit)
         bnNew = nProofOfWorkLimit;
 
-    LogPrintf("GetNextWorkRequired RETARGET\n");
+    LogPrintf("GetNextWorkRequired(Algo=%d) RETARGET\n", algo);
     LogPrintf("nTargetTimespan = %d    nActualTimespan = %d\n", params.nPoWAveragingTargetTimespan(), nActualTimespan);
-    LogPrintf("Before: %08x  %s\n", pindexLast->nBits, bnOld.ToString());
+    LogPrintf("Before: %08x  %s\n", pindexPrev->nBits, bnOld.ToString());
     LogPrintf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.ToString());
 
     return bnNew.GetCompact();

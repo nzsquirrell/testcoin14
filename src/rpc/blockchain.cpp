@@ -1077,10 +1077,10 @@ UniValue verifychain(const JSONRPCRequest& request)
 }
 
 /** Implementation of IsSuperMajority with better feedback */
-static UniValue SoftForkMajorityDesc(int version, CBlockIndex* pindex, const Consensus::Params& consensusParams)
+static UniValue SoftForkMajorityDesc(int minVersion, CBlockIndex* pindex, int nRequired, const Consensus::Params& consensusParams)
 {
     UniValue rv(UniValue::VOBJ);
-    bool activated = false;
+/*    bool activated = false;
     switch(version)
     {
         case 2:
@@ -1092,8 +1092,22 @@ static UniValue SoftForkMajorityDesc(int version, CBlockIndex* pindex, const Con
         case 4:
             activated = pindex->nHeight >= consensusParams.BIP65Height;
             break;
+    }*/
+
+    int nFound = 0;
+    CBlockIndex* pstart = pindex;
+    for (int i = 0; i < consensusParams.nMajorityWindow && pstart != NULL; i++)
+    {
+        if (pstart->GetBaseVersion() >= minVersion)
+            ++nFound;
+        pstart = pstart->pprev;
     }
-    rv.push_back(Pair("status", activated));
+
+    //rv.push_back(Pair("status", activated));
+    rv.push_back(Pair("status", nFound >= nRequired));
+    rv.push_back(Pair("found", nFound));
+    rv.push_back(Pair("required", nRequired));
+    rv.push_back(Pair("window", consensusParams.nMajorityWindow));
     return rv;
 }
 
@@ -1102,7 +1116,8 @@ static UniValue SoftForkDesc(const std::string &name, int version, CBlockIndex* 
     UniValue rv(UniValue::VOBJ);
     rv.push_back(Pair("id", name));
     rv.push_back(Pair("version", version));
-    rv.push_back(Pair("reject", SoftForkMajorityDesc(version, pindex, consensusParams)));
+    rv.push_back(Pair("enforce", SoftForkMajorityDesc(version, pindex, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams)));
+    rv.push_back(Pair("reject", SoftForkMajorityDesc(version, pindex, consensusParams.nMajorityRejectBlockOutdated, consensusParams)));
     return rv;
 }
 
@@ -1200,14 +1215,14 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     const Consensus::Params& consensusParams = Params().GetConsensus();
     CBlockIndex* tip = chainActive.Tip();
     UniValue softforks(UniValue::VARR);
-    UniValue bip9_softforks(UniValue::VOBJ);
+    // UniValue bip9_softforks(UniValue::VOBJ);
     softforks.push_back(SoftForkDesc("bip34", 2, tip, consensusParams));
     softforks.push_back(SoftForkDesc("bip66", 3, tip, consensusParams));
     softforks.push_back(SoftForkDesc("bip65", 4, tip, consensusParams));
-    BIP9SoftForkDescPushBack(bip9_softforks, "csv", consensusParams, Consensus::DEPLOYMENT_CSV);
-    BIP9SoftForkDescPushBack(bip9_softforks, "segwit", consensusParams, Consensus::DEPLOYMENT_SEGWIT);
+    // BIP9SoftForkDescPushBack(bip9_softforks, "csv", consensusParams, Consensus::DEPLOYMENT_CSV);
+    // BIP9SoftForkDescPushBack(bip9_softforks, "segwit", consensusParams, Consensus::DEPLOYMENT_SEGWIT);
     obj.push_back(Pair("softforks",             softforks));
-    obj.push_back(Pair("bip9_softforks", bip9_softforks));
+    // obj.push_back(Pair("bip9_softforks", bip9_softforks));
 
     if (fPruneMode)
     {
