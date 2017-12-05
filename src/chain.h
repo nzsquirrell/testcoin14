@@ -147,6 +147,10 @@ enum BlockStatus: uint32_t {
     BLOCK_FAILED_MASK        =   BLOCK_FAILED_VALID | BLOCK_FAILED_CHILD,
 
     BLOCK_OPT_WITNESS       =   128, //!< block data in blk*.data was received with a witness-enforcing client
+
+	BLOCK_PROOF_OF_STAKE     =   256, //! is proof-of-stake block
+	BLOCK_STAKE_ENTROPY		 =	 512,
+	BLOCK_STAKE_MODIFIER	 =	 1024,
 };
 
 /** The block chain is a tree shaped structure starting with the
@@ -193,6 +197,9 @@ public:
     //! Verification status of this block. See enum BlockStatus
     unsigned int nStatus;
 
+    //! hash modifier of proof-of-stake
+    uint256 nStakeModifier;
+
     //! block header
     int nVersion;
     uint256 hashMerkleRoot;
@@ -219,6 +226,7 @@ public:
         nTx = 0;
         nChainTx = 0;
         nStatus = 0;
+        nStakeModifier = uint256();
         nSequenceId = 0;
         nTimeMax = 0;
 
@@ -328,6 +336,21 @@ public:
             GetBlockHash().ToString());
     }
 
+    bool IsProofOfWork() const
+    {
+          return !IsProofOfStake();
+    }
+
+    bool IsProofOfStake() const
+    {
+         return (nStatus & BLOCK_PROOF_OF_STAKE);
+    }
+
+    void SetProofOfStake()
+    {
+         nStatus |= BLOCK_PROOF_OF_STAKE;
+    }
+
     //! Check whether this block index entry is valid up to the passed validity level.
     bool IsValid(enum BlockStatus nUpTo = BLOCK_VALID_TRANSACTIONS) const
     {
@@ -397,6 +420,7 @@ public:
 
         READWRITE(VARINT(nHeight));
         READWRITE(VARINT(nStatus));
+        READWRITE(nStakeModifier);
         READWRITE(VARINT(nTx));
         if (nStatus & (BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO))
             READWRITE(VARINT(nFile));

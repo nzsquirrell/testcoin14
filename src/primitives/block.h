@@ -69,6 +69,7 @@ class CBlock : public CBlockHeader
 public:
     // network and disk
     std::vector<CTransactionRef> vtx;
+    std::vector<unsigned char> vchBlockSig;
 
     // memory only
     mutable bool fChecked;
@@ -90,6 +91,8 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(*(CBlockHeader*)this);
         READWRITE(vtx);
+        if(vtx.size() > 1 && vtx[1]->IsCoinStake())
+            READWRITE(vchBlockSig);
     }
 
     void SetNull()
@@ -97,6 +100,7 @@ public:
         CBlockHeader::SetNull();
         vtx.clear();
         fChecked = false;
+        vchBlockSig.clear();
     }
 
     CBlockHeader GetBlockHeader() const
@@ -110,6 +114,16 @@ public:
         block.nNonce         = nNonce;
         block.auxpow         = auxpow;
         return block;
+    }
+
+    bool IsProofOfStake() const
+    {
+        return (vtx.size() > 1 && vtx[1]->IsCoinStake());
+    }
+
+    bool IsProofOfWork() const
+    {
+        return !IsProofOfStake();
     }
 
     std::string ToString(const Consensus::Params& consensusParams) const;
