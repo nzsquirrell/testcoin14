@@ -5,7 +5,6 @@
 #ifndef BLACKCOIN_POS_H
 #define BLACKCOIN_POS_H
 
-#include "pos.h"
 #include "txdb.h"
 #include "validation.h"
 #include "arith_uint256.h"

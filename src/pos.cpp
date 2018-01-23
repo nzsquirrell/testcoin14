@@ -34,12 +34,13 @@ uint256 ComputeStakeModifier(const CBlockIndex* pindexPrev, const uint256& kerne
 // BlackCoin kernel protocol v3
 // coinstake must meet hash target according to the protocol:
 // kernel (input 0) must meet the formula
-//     hash(nStakeModifier + txPrev.nTime + txPrev.vout.hash + txPrev.vout.n + nTime) < bnTarget * nWeight
+//     hash(nStakeModifier + blockFromTime + txPrev.vout.hash + txPrev.vout.n + nTime) < bnTarget * nWeight
 // this ensures that the chance of getting a coinstake is proportional to the
 // amount of coins one owns.
 // The reason this hash is chosen is the following:
 //   nStakeModifier: scrambles computation to make it very difficult to precompute
 //                   future proof-of-stake
+//   blockFromTime: nTime from the block that contains txPrev
 //   txPrev.vout.hash: hash of txPrev, to reduce the chance of nodes
 //                     generating coinstake at the same time
 //   txPrev.vout.n: output number of txPrev, to reduce the chance of nodes
@@ -77,25 +78,34 @@ bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits, uin
 }
 
 // Check kernel hash target and coinstake signature
+/*
+    pindexPrev = index to the previous block in the blockchain
+    tx = the coinstake transaction
+    nBits = the difficulty of this new PoS block
+    nTimeBlock = the timstamp of this new PoS block
+*/
 bool CheckProofOfStake(CBlockIndex* pindexPrev, const CTransaction& tx, unsigned int nBits, uint32_t nTimeBlock, CValidationState &state)
 {
+    // ensure the transaction is a coinstake tx
     if (!tx.IsCoinStake())
         return error("CheckProofOfStake() : called on non-coinstake %s", tx.GetHash().ToString());
 
     // Kernel (input 0) must match the stake hash target (nBits)
     const CTxIn& txin = tx.vin[0];
 
-    // First try finding the previous transaction in database
+    // First try finding the previous output transaction in database - requires the transaction (txindex) to be enabled
     uint256 hashBlock;
     //CTransaction txPrev;
     CTransactionRef txPrev;
     if (!GetTransaction(txin.prevout.hash, txPrev, Params().GetConsensus(), hashBlock, true))
         return error("CheckProofOfStake() : INFO: read txPrev failed");
 
+
     //verify signature
     if (!VerifySignature(*txPrev, tx, 0, SCRIPT_VERIFY_NONE, 0))
         return state.DoS(100, error("CheckProofOfStake() : VerifySignature failed on coinstake %s", tx.GetHash().ToString()));
 
+    // find the index to the block containing the output transaction
     CBlockIndex* pindex = NULL;
     BlockMap::iterator it = mapBlockIndex.find(hashBlock);
     if (it != mapBlockIndex.end())
@@ -108,9 +118,11 @@ bool CheckProofOfStake(CBlockIndex* pindexPrev, const CTransaction& tx, unsigned
     if (!ReadBlockFromDisk(blockprev, pindex->GetBlockPos(), Params().GetConsensus()))
         return error("CheckProofOfStake(): INFO: failed to find block");
 
+    // now confirm the difficulty of the computed kernel is less than nBits
     if (!CheckStakeKernelHash(pindexPrev, nBits, blockprev.nTime, new CCoins(*txPrev, pindexPrev->nHeight), txin.prevout, nTimeBlock))
        return state.DoS(1, error("CheckProofOfStake() : INFO: check kernel failed on coinstake %s", tx.GetHash().ToString())); // may occur during initial download or if behind on block chain sync
 
+    // all good, return success
     return true;
 }
 
