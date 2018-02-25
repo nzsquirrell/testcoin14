@@ -56,22 +56,33 @@ bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits, uin
     if (nTimeBlock < blockFromTime)  // Transaction timestamp violation
         return error("CheckStakeKernelHash() : nTime violation");
 
-    // Weight
-    int64_t nValueIn = txPrev->vout[prevout.n].nValue;
-    if (nValueIn == 0)
-        return false;
-
     // Base target
     arith_uint256 bnTarget;
     bnTarget.SetCompact(nBits);
+    //LogPrintf("CheckStakeKernelHash() : bnTarget=%s\n", bnTarget.GetHex());
+
+    // Weighted target
+    int64_t nValueIn = txPrev->vout[prevout.n].nValue;
+    //LogPrintf("CheckStakeKernelHash() : nValueIn=%u\n", nValueIn);
+    if (nValueIn == 0)
+        return false;
+    arith_uint256 bnWeight = arith_uint256(nValueIn);
+    bnTarget *= bnWeight;
+    //LogPrintf("CheckStakeKernelHash() : weighted bnTarget=%s\n", bnTarget.GetHex());
 
     // Calculate hash
     CHashWriter ss(SER_GETHASH, 0);
     ss << pindexPrev->nStakeModifier << blockFromTime << prevout.hash << prevout.n << nTimeBlock;
     uint256 hashProofOfStake = ss.GetHash();
 
+    LogPrintf("CheckStakeKernelHash() : check modifier=%s nTimeBlockFrom=%u nPrevout=%u nTimeBlock=%u hashProof=%s\n",
+        pindexPrev->nStakeModifier.GetHex().c_str(),
+        blockFromTime, prevout.n, nTimeBlock,
+        hashProofOfStake.ToString());
+
+    //LogPrintf("CheckStakeKernelHash() : hashProofOfStake=%s\n", hashProofOfStake.GetHex());
     // Now check if proof-of-stake hash meets target protocol
-    if (UintToArith256(hashProofOfStake) / nValueIn > bnTarget)
+    if (UintToArith256(hashProofOfStake) > bnTarget)
         return false;
 
     return true;

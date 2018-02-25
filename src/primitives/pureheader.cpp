@@ -47,6 +47,8 @@ int GetAlgo(int nVersion)
             return ALGO_SLOT2;
         case BLOCK_VERSION_SLOT3:
             return ALGO_SLOT3;
+        case BLOCK_VERSION_POS:
+            return ALGO_POS;
     }
     return ALGO_SLOT1;
 }

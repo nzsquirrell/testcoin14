@@ -15,13 +15,17 @@ enum {
     ALGO_SLOT1 = 0,  // Skein
     ALGO_SLOT2 = 1,  // Myr-Groestl
     ALGO_SLOT3 = 2,  // Sha256d
-    NUM_ALGOS
+    ALGO_POS = 3     // Proof-Of-Stake
+
 };
+
+const int NUM_ALGOS = 3;
 
 enum {
     BLOCK_VERSION_ALGO      = (7 << 9),
     BLOCK_VERSION_SLOT2     = (1 << 9),
-    BLOCK_VERSION_SLOT3     = (2 << 9)
+    BLOCK_VERSION_SLOT3     = (2 << 9),
+    BLOCK_VERSION_POS       = (3 << 9),
 };
 
 /** extract algo from nVersion */
@@ -160,6 +164,12 @@ public:
             nVersion |= VERSION_AUXPOW;
         else
             nVersion &= ~VERSION_AUXPOW;
+    }
+
+    /** Encode Proof-Of-Stake into nVersion */
+    inline void SetPOSVersion()
+    {
+        nVersion |= BLOCK_VERSION_POS;
     }
 
     /**
