@@ -14,7 +14,8 @@
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, int algo, const Consensus::Params& params)
 {
     const arith_uint256 nProofOfWorkLimit = UintToArith256(params.powLimit[algo]);
-
+    const arith_uint256 nPoSLimit = UintToArith256(params.posLimit);
+    
     // Genesis block
     if (pindexLast == NULL)
         return nProofOfWorkLimit.GetCompact();
@@ -22,7 +23,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     // find previous block with same algo
     const CBlockIndex* pindexPrev = GetLastBlockIndexForAlgo(pindexLast, algo);
     if (pindexPrev == NULL)
-        return nProofOfWorkLimit.GetCompact();
+        return (algo == ALGO_POS) ? nPoSLimit.GetCompact() : nProofOfWorkLimit.GetCompact();
 
     const CBlockIndex* pindexFirst = pindexPrev;
 

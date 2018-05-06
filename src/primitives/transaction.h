@@ -172,6 +172,12 @@ public:
         return (nValue == 0 && scriptPubKey.empty());
     }
 
+    bool IsUnspendable() const
+    {
+        return IsEmpty() ||
+                 (scriptPubKey.size() > 0 && *scriptPubKey.begin() == OP_RETURN);
+    }
+    
     CAmount GetDustThreshold(const CFeeRate &minRelayTxFee) const
     {
         // "Dust" is defined in terms of CTransaction::minRelayTxFee,

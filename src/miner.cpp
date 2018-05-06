@@ -48,7 +48,7 @@ uint64_t nLastBlockTx = 0;
 uint64_t nLastBlockSize = 0;
 uint64_t nLastBlockWeight = 0;
 int64_t nLastCoinStakeSearchInterval = 0;
-unsigned int nMinerSleep = 500;
+unsigned int nMinerSleep = 1000;
 
 class ScoreCompare
 {
@@ -815,7 +815,7 @@ bool CheckStake(const std::shared_ptr<const CBlock> pblock, CWallet& wallet)
 void ThreadStakeMiner(CWallet *pwallet)
 {
 
-    //SetThreadPriority(THREAD_PRIORITY_LOWEST); TODO - FIX
+    SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
     // Make this thread recognisable as the mining thread
     RenameThread("testcoin-miner");
@@ -851,12 +851,11 @@ void ThreadStakeMiner(CWallet *pwallet)
 
         if(pwallet->HaveAvailableCoinsForStaking())
         {
-            LogPrintf("ThreadStakeMiner() : Have transaction outputs available for staking, attempting to stake\n");
+            //LogPrintf("ThreadStakeMiner() : Have transaction outputs available for staking, attempting to stake\n");
             //
             // Create new block
             //
             int64_t nFees;
-            //auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlock(chainparams, reservekey.reserveScript, &nFees, true));
             std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(Params()).CreateNewBlock(reservekey.reserveScript, miningAlgo, &nFees, false, true));
             if (!pblocktemplate.get())
                  return;
@@ -866,13 +865,14 @@ void ThreadStakeMiner(CWallet *pwallet)
 
             //LogPrintf("ThreadStakeMiner() : Have new block\n");
             // Trying to sign a block
-            pblock->nBits = UintToArith256(Params().GetConsensus().posLimit).GetCompact();
+            //pblock->nBits = UintToArith256(Params().GetConsensus().posLimit).GetCompact();
+
             if (SignBlock(pblock, *pwallet, nFees))
             {
                 LogPrintf("ThreadStakeMiner() : Found likely block candidate, checking\n");
-                //SetThreadPriority(THREAD_PRIORITY_NORMAL);  TODO - FIX
+                SetThreadPriority(THREAD_PRIORITY_NORMAL);
                 CheckStake(pblock, *pwallet);
-                //SetThreadPriority(THREAD_PRIORITY_LOWEST);  TODO - FIX
+                SetThreadPriority(THREAD_PRIORITY_LOWEST);
                 MilliSleep(500);
             }
             else
@@ -887,3 +887,17 @@ void ThreadStakeMiner(CWallet *pwallet)
 }
 
 
+void StartStaker(CWallet *pwallet)
+{
+    static boost::thread_group* stakeThread = NULL;
+
+    if (stakeThread != NULL)
+    {
+        stakeThread->interrupt_all();
+        delete stakeThread;
+        stakeThread = NULL;
+    }
+
+    stakeThread = new boost::thread_group();
+    stakeThread->create_thread(boost::bind(&ThreadStakeMiner, pwallet));
+}

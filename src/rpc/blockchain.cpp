@@ -47,7 +47,7 @@ void ScriptPubKeyToJSON(const CScript& scriptPubKey, UniValue& out, bool fInclud
 double GetDifficulty(const CBlockIndex* blockindex, int algo)
 {
     unsigned int nBits;
-    unsigned int powLimit = UintToArith256(Params().GetConsensus().powLimit[algo]).GetCompact();
+    unsigned int powLimit = (algo == ALGO_POS) ? UintToArith256(Params().GetConsensus().posLimit).GetCompact() : UintToArith256(Params().GetConsensus().powLimit[algo]).GetCompact();
     // Floating point number that is a multiple of the minimum difficulty,
     // minimum difficulty = 1.0.
     if (blockindex == NULL)
@@ -197,6 +197,9 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
     result.push_back(Pair("chainwork", blockindex->nChainWork.GetHex()));
     if (block.auxpow)
         result.push_back(Pair("auxpow", AuxpowToJSON(*block.auxpow)));
+    result.push_back(Pair("modifier", blockindex->nStakeModifier.GetHex()));
+    if (block.IsProofOfStake())
+        result.push_back(Pair("signature", HexStr(block.vchBlockSig.begin(), block.vchBlockSig.end())));
     if (blockindex->pprev)
         result.push_back(Pair("previousblockhash", blockindex->pprev->GetBlockHash().GetHex()));
     CBlockIndex *pnext = chainActive.Next(blockindex);
@@ -995,6 +998,7 @@ UniValue gettxout(const JSONRPCRequest& request)
             "  },\n"
             "  \"version\" : n,            (numeric) The version\n"
             "  \"coinbase\" : true|false   (boolean) Coinbase or not\n"
+            "  \"coinstake\" : true|false  (boolean) Coinstake or not\n"
             "}\n"
 
             "\nExamples:\n"
@@ -1044,6 +1048,7 @@ UniValue gettxout(const JSONRPCRequest& request)
     ret.push_back(Pair("scriptPubKey", o));
     ret.push_back(Pair("version", coins.nVersion));
     ret.push_back(Pair("coinbase", coins.fCoinBase));
+    ret.push_back(Pair("coinbase", coins.fCoinStake));
 
     return ret;
 }

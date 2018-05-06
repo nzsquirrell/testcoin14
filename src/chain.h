@@ -200,6 +200,9 @@ public:
     //! hash modifier of proof-of-stake
     uint256 nStakeModifier;
 
+    //! value of coins mined
+    uint64_t nMoneySupply;
+
     //! block header
     int nVersion;
     uint256 hashMerkleRoot;
@@ -227,6 +230,7 @@ public:
         nChainTx = 0;
         nStatus = 0;
         nStakeModifier = uint256();
+        nMoneySupply = 0;
         nSequenceId = 0;
         nTimeMax = 0;
 
@@ -421,6 +425,7 @@ public:
         READWRITE(VARINT(nHeight));
         READWRITE(VARINT(nStatus));
         READWRITE(nStakeModifier);
+        READWRITE(VARINT(nMoneySupply));
         READWRITE(VARINT(nTx));
         if (nStatus & (BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO))
             READWRITE(VARINT(nFile));

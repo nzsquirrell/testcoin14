@@ -38,9 +38,12 @@ extern CWallet* pwalletMain;
  * Settings
  */
 extern CFeeRate payTxFee;
+extern CAmount nReserveBalance;
+extern CAmount nMinimumInputValue;
 extern unsigned int nTxConfirmTarget;
 extern bool bSpendZeroConfChange;
 extern bool fSendFreeTransactions;
+extern bool fWalletUnlockStakingOnly;
 extern bool fWalletRbf;
 
 static const unsigned int DEFAULT_KEYPOOL_SIZE = 100;
@@ -197,6 +200,7 @@ public:
     mutable bool fDebitCached;
     mutable bool fCreditCached;
     mutable bool fImmatureCreditCached;
+    mutable bool fImmatureStakeCreditCached;
     mutable bool fAvailableCreditCached;
     mutable bool fWatchDebitCached;
     mutable bool fWatchCreditCached;
@@ -206,6 +210,7 @@ public:
     mutable CAmount nDebitCached;
     mutable CAmount nCreditCached;
     mutable CAmount nImmatureCreditCached;
+    mutable CAmount nImmatureStakeCreditCached;
     mutable CAmount nAvailableCreditCached;
     mutable CAmount nWatchDebitCached;
     mutable CAmount nWatchCreditCached;
@@ -236,7 +241,9 @@ public:
         fDebitCached = false;
         fCreditCached = false;
         fImmatureCreditCached = false;
+        fImmatureStakeCreditCached = false;
         fAvailableCreditCached = false;
+        fImmatureCreditCached = false;
         fWatchDebitCached = false;
         fWatchCreditCached = false;
         fImmatureWatchCreditCached = false;
@@ -245,6 +252,7 @@ public:
         nDebitCached = 0;
         nCreditCached = 0;
         nImmatureCreditCached = 0;
+        nImmatureStakeCreditCached = 0;
         nAvailableCreditCached = 0;
         nWatchDebitCached = 0;
         nWatchCreditCached = 0;
@@ -322,6 +330,7 @@ public:
     CAmount GetDebit(const isminefilter& filter) const;
     CAmount GetCredit(const isminefilter& filter) const;
     CAmount GetImmatureCredit(bool fUseCache=true) const;
+    CAmount GetImmatureStakeCredit(bool fUseCache=true) const;
     CAmount GetAvailableCredit(bool fUseCache=true) const;
     CAmount GetImmatureWatchOnlyCredit(const bool& fUseCache=true) const;
     CAmount GetAvailableWatchOnlyCredit(const bool& fUseCache=true) const;
@@ -720,6 +729,7 @@ public:
     CAmount GetBalance() const;
     CAmount GetUnconfirmedBalance() const;
     CAmount GetImmatureBalance() const;
+    CAmount GetStakeBalance() const;
     CAmount GetWatchOnlyBalance() const;
     CAmount GetUnconfirmedWatchOnlyBalance() const;
     CAmount GetImmatureWatchOnlyBalance() const;
@@ -842,6 +852,8 @@ public:
 
     //! get the current wallet format (the oldest client version guaranteed to understand this wallet)
     int GetVersion() { LOCK(cs_wallet); return nWalletVersion; }
+
+    void DisableTransaction(const CTransaction &tx);
 
     //! Get wallet transactions that conflict with given transaction (spend same outputs)
     std::set<uint256> GetConflicts(const uint256& txid) const;

@@ -237,6 +237,7 @@ UniValue getmininginfo(const JSONRPCRequest& request)
             "  \"difficulty_skein\": xxx.xxxxx   (numeric) The current difficulty for skein\n"
             "  \"difficulty_groestl\": xxx.xxxxx (numeric) The current difficulty for myr-groestl\n"
             "  \"difficulty_sha256d\": xxx.xxxxx (numeric) The current difficulty for sha256d\n"
+            "  \"difficulty_pos\": xxx.xxxxx (numeric) The current difficulty for proof-of-stake\n"
             "  \"errors\": \"...\"            (string) Current errors\n"
             "  \"networkhashps\": nnn,      (numeric) The network hashes per second\n"
             "  \"pooledtx\": n              (numeric) The size of the mempool\n"
@@ -261,13 +262,13 @@ UniValue getmininginfo(const JSONRPCRequest& request)
     obj.push_back(Pair("difficulty_skein",   (double)GetDifficulty(NULL, ALGO_SLOT1)));
     obj.push_back(Pair("difficulty_groestl", (double)GetDifficulty(NULL, ALGO_SLOT2)));
     obj.push_back(Pair("difficulty_sha256s", (double)GetDifficulty(NULL, ALGO_SLOT3)));
+    obj.push_back(Pair("difficulty_pos", (double)GetDifficulty(NULL, ALGO_POS)));
     obj.push_back(Pair("errors",           GetWarnings("statusbar")));
     obj.push_back(Pair("networkhashps",    getnetworkhashps(request)));
     obj.push_back(Pair("pooledtx",         (uint64_t)mempool.size()));
     obj.push_back(Pair("chain",            Params().NetworkIDString()));
     return obj;
 }
-
 
 // NOTE: Unlike wallet RPC (which use BTC values), mining RPCs follow GBT (BIP 22) in using satoshi amounts
 UniValue prioritisetransaction(const JSONRPCRequest& request)

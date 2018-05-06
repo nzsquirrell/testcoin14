@@ -51,7 +51,7 @@ uint256 ComputeStakeModifier(const CBlockIndex* pindexPrev, const uint256& kerne
 //   a proof-of-work situation.
 //
 
-bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits, uint32_t blockFromTime, const CCoins* txPrev, const COutPoint& prevout, unsigned int nTimeBlock)
+bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits, uint32_t blockFromTime, const CCoins* txPrev, const COutPoint& prevout, unsigned int nTimeBlock, bool fLog)
 {
     if (nTimeBlock < blockFromTime)  // Transaction timestamp violation
         return error("CheckStakeKernelHash() : nTime violation");
@@ -75,10 +75,11 @@ bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits, uin
     ss << pindexPrev->nStakeModifier << blockFromTime << prevout.hash << prevout.n << nTimeBlock;
     uint256 hashProofOfStake = ss.GetHash();
 
-    LogPrintf("CheckStakeKernelHash() : check modifier=%s nTimeBlockFrom=%u nPrevout=%u nTimeBlock=%u hashProof=%s\n",
-        pindexPrev->nStakeModifier.GetHex().c_str(),
-        blockFromTime, prevout.n, nTimeBlock,
-        hashProofOfStake.ToString());
+    if(fLog)
+        LogPrintf("CheckStakeKernelHash() : check modifier=%s nTimeBlockFrom=%u nPrevout=%u nTimeBlock=%u hashProof=%s\n",
+            pindexPrev->nStakeModifier.GetHex().c_str(),
+            blockFromTime, prevout.n, nTimeBlock,
+            hashProofOfStake.ToString());
 
     //LogPrintf("CheckStakeKernelHash() : hashProofOfStake=%s\n", hashProofOfStake.GetHex());
     // Now check if proof-of-stake hash meets target protocol
@@ -130,7 +131,7 @@ bool CheckProofOfStake(CBlockIndex* pindexPrev, const CTransaction& tx, unsigned
         return error("CheckProofOfStake(): INFO: failed to find block");
 
     // now confirm the difficulty of the computed kernel is less than nBits
-    if (!CheckStakeKernelHash(pindexPrev, nBits, blockprev.nTime, new CCoins(*txPrev, pindexPrev->nHeight), txin.prevout, nTimeBlock))
+    if (!CheckStakeKernelHash(pindexPrev, nBits, blockprev.nTime, new CCoins(*txPrev, pindexPrev->nHeight), txin.prevout, nTimeBlock, true))
        return state.DoS(1, error("CheckProofOfStake() : INFO: check kernel failed on coinstake %s", tx.GetHash().ToString())); // may occur during initial download or if behind on block chain sync
 
     // all good, return success

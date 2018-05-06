@@ -195,6 +195,8 @@ bool CBlockTreeDB::LoadBlockIndexGuts(boost::function<CBlockIndex*(const uint256
                 pindexNew->nBits          = diskindex.nBits;
                 pindexNew->nNonce         = diskindex.nNonce;
                 pindexNew->nStatus        = diskindex.nStatus;
+                pindexNew->nStakeModifier = diskindex.nStakeModifier;
+                pindexNew->nMoneySupply   = diskindex.nMoneySupply;
                 pindexNew->nTx            = diskindex.nTx;
 
                 /* Bitcoin checks the PoW here.  We don't do this because the CDiskBlockIndex does not contain the auxpow.

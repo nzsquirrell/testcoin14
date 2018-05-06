@@ -51,6 +51,7 @@ UniValue getinfo(const JSONRPCRequest& request)
             "  \"protocolversion\": xxxxx,   (numeric) the protocol version\n"
             "  \"walletversion\": xxxxx,     (numeric) the wallet version\n"
             "  \"balance\": xxxxxxx,         (numeric) the total bitcoin balance of the wallet\n"
+            "  \"stake\": xxxxxxx,           (numeric) the total stake balance of the wallet\n"
             "  \"blocks\": xxxxxx,           (numeric) the current number of blocks processed in the server\n"
             "  \"timeoffset\": xxxxx,        (numeric) the time offset\n"
             "  \"connections\": xxxxx,       (numeric) the number of connections\n"
@@ -61,7 +62,9 @@ UniValue getinfo(const JSONRPCRequest& request)
             "  \"difficulty_skein\": xxx.xxxxx   (numeric) The current difficulty for skein\n"
             "  \"difficulty_groestl\": xxx.xxxxx (numeric) The current difficulty for myr-groestl\n"
             "  \"difficulty_sha256d\": xxx.xxxxx (numeric) The current difficulty for sha256d\n"
+            "  \"difficulty_pos\": xxx.xxxxx (numeric) The current difficulty for proof-of-stake\n"
             "  \"testnet\": true|false,      (boolean) if the server is using testnet or not\n"
+            "  \"moneysupply\": xxx.xxxxx,   (numeric) value of all coins mined\n"
             "  \"keypoololdest\": xxxxxx,    (numeric) the timestamp (seconds since Unix epoch) of the oldest pre-generated key in the key pool\n"
             "  \"keypoolsize\": xxxx,        (numeric) how many new keys are pre-generated\n"
             "  \"unlocked_until\": ttt,      (numeric) the timestamp in seconds since epoch (midnight Jan 1 1970 GMT) that the wallet is unlocked for transfers, or 0 if the wallet is locked\n"
@@ -90,6 +93,7 @@ UniValue getinfo(const JSONRPCRequest& request)
     if (pwalletMain) {
         obj.push_back(Pair("walletversion", pwalletMain->GetVersion()));
         obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance())));
+        obj.push_back(Pair("stake",         ValueFromAmount(pwalletMain->GetStakeBalance())));
     }
 #endif
     obj.push_back(Pair("blocks",        (int)chainActive.Height()));
@@ -103,7 +107,9 @@ UniValue getinfo(const JSONRPCRequest& request)
     obj.push_back(Pair("difficulty_skein",   (double)GetDifficulty(NULL, ALGO_SLOT1)));
     obj.push_back(Pair("difficulty_groestl", (double)GetDifficulty(NULL, ALGO_SLOT2)));
     obj.push_back(Pair("difficulty_sha256s", (double)GetDifficulty(NULL, ALGO_SLOT3)));
+    obj.push_back(Pair("difficulty_pos", (double)GetDifficulty(NULL, ALGO_POS)));
     obj.push_back(Pair("testnet",       Params().NetworkIDString() == CBaseChainParams::TESTNET));
+    obj.push_back(Pair("moneysupply",       pindexBestHeader->nMoneySupply / COIN));
 #ifdef ENABLE_WALLET
     if (pwalletMain) {
         obj.push_back(Pair("keypoololdest", pwalletMain->GetOldestKeyPoolTime()));

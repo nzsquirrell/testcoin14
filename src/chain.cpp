@@ -250,6 +250,8 @@ std::string GetAlgoName(int algo, uint32_t time, const Consensus::Params& consen
             return std::string("Myr-Groestl");
         case ALGO_SLOT3:
             return std::string("Sha256d");
+        case ALGO_POS:
+            return std::string("Proof-of-Stake");
     }
     return std::string("Unknown");
 }

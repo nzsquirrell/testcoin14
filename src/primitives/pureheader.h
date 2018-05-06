@@ -44,6 +44,7 @@ private:
 
     /* Modifiers to the version.  */
     static const int32_t VERSION_AUXPOW = (1 << 8);
+    static const int32_t VERSION_POS = (1 << 15);
 
     /** Bits above are reserved for the auxpow chain ID.  */
     static const int32_t VERSION_CHAIN_START = (1 << 16);
@@ -169,7 +170,17 @@ public:
     /** Encode Proof-Of-Stake into nVersion */
     inline void SetPOSVersion()
     {
-        nVersion |= BLOCK_VERSION_POS;
+        nVersion |= BLOCK_VERSION_POS | VERSION_POS;
+    }
+
+    inline bool IsProofOfStake() const
+    {
+        return nVersion & VERSION_POS;
+    }
+
+    inline bool IsProofOfWork() const
+    {
+        return !IsProofOfStake();
     }
 
     /**

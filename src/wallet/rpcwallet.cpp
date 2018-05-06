@@ -51,10 +51,17 @@ bool EnsureWalletIsAvailable(bool avoidException)
     return true;
 }
 
+// optional setting to unlock wallet for staking only
+// serves to disable the trivial sendmoney when OS account compromised
+// provides no real security
+bool fWalletUnlockStakingOnly = false;
+
 void EnsureWalletIsUnlocked()
 {
     if (pwalletMain->IsLocked())
         throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
+    if (fWalletUnlockStakingOnly)
+        throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Wallet is unlocked for staking only.");
 }
 
 void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
@@ -1793,7 +1800,7 @@ UniValue gettransaction(const JSONRPCRequest& request)
             "      \"fee\": x.xxx,                     (numeric) The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the \n"
             "                                           'send' category of transactions.\n"
             "      \"abandoned\": xxx                  (bool) 'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
-            "                                           'send' category of transactions.\n"			
+            "                                           'send' category of transactions.\n"
             "    }\n"
             "    ,...\n"
             "  ],\n"
@@ -1952,14 +1959,15 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
     if (!EnsureWalletIsAvailable(request.fHelp))
         return NullUniValue;
 
-    if (pwalletMain->IsCrypted() && (request.fHelp || request.params.size() != 2))
+    if (pwalletMain->IsCrypted() && (request.fHelp || request.params.size() < 2 || request.params.size() > 3))
         throw runtime_error(
-            "walletpassphrase \"passphrase\" timeout\n"
+            "walletpassphrase \"passphrase\" timeout stake_only\n"
             "\nStores the wallet decryption key in memory for 'timeout' seconds.\n"
             "This is needed prior to performing transactions related to private keys such as sending bitcoins\n"
             "\nArguments:\n"
             "1. \"passphrase\"     (string, required) The wallet passphrase\n"
             "2. timeout            (numeric, required) The time to keep the decryption key in seconds.\n"
+            "3. stake_only         (boolean, optional) Set to true to enable staking.\n"
             "\nNote:\n"
             "Issuing the walletpassphrase command while the wallet is already unlocked will set a new unlock\n"
             "time that overrides the old one.\n"
@@ -2002,6 +2010,12 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
     LOCK(cs_nWalletUnlockTime);
     nWalletUnlockTime = GetTime() + nSleepTime;
     RPCRunLater("lockwallet", boost::bind(LockWallet, pwalletMain), nSleepTime);
+
+    // ppcoin: if user OS account compromised prevent trivial sendmoney commands
+    if (request.params.size() > 2)
+    	fWalletUnlockStakingOnly = request.params[2].get_bool();
+    else
+    	fWalletUnlockStakingOnly = false;
 
     return NullUniValue;
 }

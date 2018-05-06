@@ -118,7 +118,8 @@ public:
 
     bool IsProofOfStake() const
     {
-        return (vtx.size() > 1 && vtx[1]->IsCoinStake());
+        CBlockHeader header = GetBlockHeader();
+        return (header.IsProofOfStake() && vtx.size() > 1 && vtx[1]->IsCoinStake());
     }
 
     bool IsProofOfWork() const
